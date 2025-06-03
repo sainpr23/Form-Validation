@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Form Validation</title>      
+    <link rel="stylesheet" href="formValidation.css">
+</head>
+
+<body>
+    <div class="form-container">
+        <div id="successMessage" class="success-message">
+            <h3>✓ Message Sent Successfully!</h3>
+            <p>Thank you for contacting us. We'll get back to you soon.</p>
+        </div>
+
+        <h1>Contact Us</h1>
+
+        <form id="contactForm" novalidate>
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" placeholder="Enter your full name">
+                <span id="nameError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email address">
+                <span id="emailError" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea id="message" name="message" placeholder="Enter your message here..."
+                    maxlength="500"></textarea>
+                <div id="charCounter" class="char-counter">0 / 500 characters</div>
+                <span id="messageError" class="error"></span>
+            </div>
+
+            <button type="submit" id="submitBtn">
+                <span id="btnText">Send Message</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('contactForm');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const messageInput = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const successMessage = document.getElementById('successMessage');
+        const charCounter = document.getElementById('charCounter');
+
+        const nameError = document.getElementById('nameError');
+        const emailError = document.getElementById('emailError');
+        const messageError = document.getElementById('messageError');
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        messageInput.addEventListener('input', function () {
+            const currentLength = this.value.length;
+            const maxLength = 500;
+            charCounter.textContent = `${currentLength} / ${maxLength} characters`;
+
+            if (currentLength > maxLength * 0.9) {
+                charCounter.classList.add('warning');
+            } else {
+                charCounter.classList.remove('warning');
+            }
+
+            if (currentLength >= maxLength) {
+                charCounter.classList.add('error');
+            } else {
+                charCounter.classList.remove('error');
+            }
+        });
+
+        function validateName() {
+            const name = nameInput.value.trim();
+
+            if (name === '') {
+                showError(nameInput, nameError, 'Name is required');
+                return false;
+            } else if (name.length < 2) {
+                showError(nameInput, nameError, 'Name must be at least 2 characters long');
+                return false;
+            } else if (!/^[a-zA-Z\s'-]+$/.test(name)) {
+                showError(nameInput, nameError, 'Name can only contain letters, spaces, hyphens, and apostrophes');
+                return false;
+            } else {
+                showSuccess(nameInput, nameError);
+                return true;
+            }
+        }
+
+        function validateEmail() {
+            const email = emailInput.value.trim();
+
+            if (email === '') {
+                showError(emailInput, emailError, 'Email is required');
+                return false;
+            } else if (!emailRegex.test(email)) {
+                showError(emailInput, emailError, 'Please enter a valid email address');
+                return false;
+            } else {
+                showSuccess(emailInput, emailError);
+                return true;
+            }
+        }
+
+        function validateMessage() {
+            const message = messageInput.value.trim();
+
+            if (message === '') {
+                showError(messageInput, messageError, 'Message is required');
+                return false;
+            } else if (message.length < 10) {
+                showError(messageInput, messageError, 'Message must be at least 10 characters long');
+                return false;
+            } else if (message.length > 500) {
+                showError(messageInput, messageError, 'Message cannot exceed 500 characters');
+                return false;
+            } else {
+                showSuccess(messageInput, messageError);
+                return true;
+            }
+        }
+
+        function showError(input, errorElement, message) {
+            input.classList.remove('input-success');
+            input.classList.add('input-error');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+
+        function showSuccess(input, errorElement) {
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+            errorElement.textContent = '';
+            errorElement.classList.remove('show');
+        }
+
+        function clearValidation(input, errorElement) {
+            input.classList.remove('input-error', 'input-success');
+            errorElement.textContent = '';
+            errorElement.classList.remove('show');
+        }
+
+        nameInput.addEventListener('blur', validateName);
+        nameInput.addEventListener('input', function () {
+            if (nameInput.classList.contains('input-error')) {
+                validateName();
+            }
+        });
+
+        emailInput.addEventListener('blur', validateEmail);
+        emailInput.addEventListener('input', function () {
+            if (emailInput.classList.contains('input-error')) {
+                validateEmail();
+            }
+        });
+
+        messageInput.addEventListener('blur', validateMessage);
+        messageInput.addEventListener('input', function () {
+            if (messageInput.classList.contains('input-error')) {
+                validateMessage();
+            }
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            successMessage.style.display = 'none';
+
+            const isNameValid = validateName();
+            const isEmailValid = validateEmail();
+            const isMessageValid = validateMessage();
+
+            if (isNameValid && isEmailValid && isMessageValid) {
+                submitBtn.disabled = true;
+                btnText.innerHTML = '<span class="loading"></span>Sending...';
+
+                setTimeout(() => {
+                    successMessage.style.display = 'block';
+
+                    form.reset();
+                    charCounter.textContent = '0 / 500 characters';
+                    charCounter.classList.remove('warning', 'error');
+
+                    clearValidation(nameInput, nameError);
+                    clearValidation(emailInput, emailError);
+                    clearValidation(messageInput, messageError);
+
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Send Message';
+
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 2000);
+            } else {
+                if (!isNameValid) {
+                    nameInput.focus();
+                } else if (!isEmailValid) {
+                    emailInput.focus();
+                } else if (!isMessageValid) {
+                    messageInput.focus();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
